@@ -2,9 +2,9 @@ import bpy
 from bpy.types import Menu, Operator
 from . bl_info import *
 
-class pie_align_active(Menu):
+class MWSCULPTPIES_MT_PIE_ALIGN_ACTIVE(Menu):
     bl_label = "Align Active"
-    bl_idname = "mw_sculpt_pie.align_active"
+    bl_idname = "MWSCULPTPIES_MT_PIE_ALIGN_ACTIVE"
     
     def draw(self, context):
         layout = self.layout

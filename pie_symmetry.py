@@ -2,9 +2,9 @@ import bpy
 from bpy.types import Menu, Operator
 from . bl_info import *
 
-class pie_symmetry(Menu):
+class MWSCULPTPIES_MT_PIE_SYMMETRY(Menu):
     bl_label = "Symmetry"
-    bl_idname = "mw_sculpt_pie.symmetry"
+    bl_idname = "MWSCULPTPIES_MT_PIE_SYMMETRY"
     
     def draw(self, context):
         layout = self.layout

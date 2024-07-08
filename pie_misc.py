@@ -1,10 +1,11 @@
 import bpy
 from bpy.types import Menu, Operator
 from . bl_info import *
+from . common import *
 
-class pie_misc(Menu):
+class MWSCULPTPIES_MT_PIE_MISC(Menu):
     bl_label = "Misc"
-    bl_idname = "mw_sculpt_pie.misc"
+    bl_idname = "MWSCULPTPIES_MT_PIE_MISC"
     
     def draw(self, context):
         layout = self.layout
@@ -115,16 +116,7 @@ class pie_misc_apply_scale(Operator):
         if bpy.context.active_object == None:
             self.report({'ERROR'}, bl_info.get('name') + ': Please select an object first')
             return {'FINISHED'}
-        bpy.context.active_object.select_set(True)
-        if bpy.context.active_object.mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode='OBJECT')
-        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-        bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=False)
-        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.mesh.normals_make_consistent(inside=False)
-        bpy.ops.object.editmode_toggle()
+        apply_scale()
         self.report({'INFO'}, bl_info.get('name') + ': Made single user, applied scale, recalculated normals')
         return {'FINISHED'}
 

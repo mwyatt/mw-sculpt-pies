@@ -3,9 +3,9 @@ from bpy.types import Menu, Operator
 from . bl_info import *
 from . rotation_copy import copyRotation
 
-class pie_create(Menu):
+class MWSCULPTPIES_MT_PIE_CREATE(Menu):
     bl_label = "Create"
-    bl_idname = "mw_sculpt_pie.create"
+    bl_idname = "MWSCULPTPIES_MT_PIE_CREATE"
     
     def draw(self, context):
         layout = self.layout

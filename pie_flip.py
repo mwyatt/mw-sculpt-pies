@@ -1,10 +1,11 @@
 import bpy
 from bpy.types import Menu, Operator
 from . bl_info import *
+from . common import *
 
-class pie_flip(Menu):
+class MWSCULPTPIES_MT_PIE_FLIP(Menu):
     bl_label = "Flip"
-    bl_idname = "mw_sculpt_pie.flip"
+    bl_idname = "MWSCULPTPIES_MT_PIE_FLIP"
     
     def draw(self, context):
         layout = self.layout
@@ -27,6 +28,7 @@ class pie_flip_x(Operator):
         if bpy.context.active_object.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.transform.mirror(orient_type='LOCAL', constraint_axis=(True, False, False))
+        apply_scale()
         self.report({'INFO'}, bl_info.get('name') + ': Mirrored over x axis')
         return {'FINISHED'}
         
@@ -44,6 +46,7 @@ class pie_flip_y(Operator):
         if bpy.context.active_object.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.transform.mirror(orient_type='LOCAL', constraint_axis=(False, True, False))
+        apply_scale()
         self.report({'INFO'}, bl_info.get('name') + ': Mirrored over y axis')
         return {'FINISHED'}
         
@@ -61,5 +64,6 @@ class pie_flip_z(Operator):
         if bpy.context.active_object.mode != 'OBJECT':
             bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.transform.mirror(orient_type='LOCAL', constraint_axis=(False, False, True))
+        apply_scale()
         self.report({'INFO'}, bl_info.get('name') + ': Mirrored over z axis')
         return {'FINISHED'}

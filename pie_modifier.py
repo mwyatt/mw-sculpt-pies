@@ -2,25 +2,31 @@ import bpy
 from bpy.types import Menu, Operator
 from . bl_info import *
 from . rotation_copy import copyRotation
+from . common import *
 
-class pie_modifier(Menu):
+class MWSCULPTPIES_MT_PIE_MODIFIER(Menu):
     bl_label = "Modifier"
-    bl_idname = "mw_sculpt_pie.modifier"
+    bl_idname = "MWSCULPTPIES_MT_PIE_MODIFIER"
     
     def draw(self, context):
         layout = self.layout
         pie = layout.menu_pie()
         pie.operator("pie.pie_modifier_decimate_05", icon='MOD_DECIM')
+        pie.operator("pie.pie_modifier_decimate_nudge", icon='GRID')
         pie.operator("pie.pie_modifier_mirror_over", icon='MOD_MIRROR')
-        pie.operator("pie.pie_modifier_hard_surface", icon='MOD_BEVEL')
-        pie.operator("pie.pie_mask_slice_new_object", icon='MOD_BEVEL')
+        pie.operator("pie.pie_modifier_sub_division_1", icon='MESH_GRID')
+        pie.operator("pie.pie_modifier_bool_union", icon='ADD')
+        pie.operator("pie.pie_modifier_bool_diff", icon='REMOVE')
+
+        # Unused
+        # pie.operator("pie.pie_modifier_hard_surface", icon='MOD_BEVEL')
 
         # wip
         # pie.operator("pie.pie_modifier_array_curve", icon='MOD_ARRAY')
 
 
 class pie_modifier_decimate_05(Operator):
-    bl_label = "decimate05"
+    bl_label = "Decimate"
     bl_idname = "pie.pie_modifier_decimate_05"
     bl_description = "Decimates object by 0.5 then applies."
 
@@ -30,10 +36,6 @@ class pie_modifier_decimate_05(Operator):
             return {'FINISHED'}
         bpy.context.active_object.select_set(True)
 
-        if bpy.context.active_object.mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode='OBJECT')
-
-        bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=False)
         bpy.ops.object.modifier_add(type='DECIMATE')
         bpy.context.object.modifiers["Decimate"].show_viewport = False
         bpy.context.object.modifiers["Decimate"].ratio = 0.5
@@ -41,8 +43,26 @@ class pie_modifier_decimate_05(Operator):
         self.report({'INFO'}, bl_info.get('name') + ': Decimated in half')
         return {'FINISHED'}
 
+class pie_modifier_decimate_nudge(Operator):
+    bl_label = "Decimate Nudge"
+    bl_idname = "pie.pie_modifier_decimate_nudge"
+    bl_description = "Decimates slightly to help boolean operations"
+
+    def execute(self, context):
+        if bpy.context.active_object == None:
+            self.report({'ERROR'}, bl_info.get('name') + ': Please select an object first')
+            return {'FINISHED'}
+        bpy.context.active_object.select_set(True)
+
+        bpy.ops.object.modifier_add(type='DECIMATE')
+        bpy.context.object.modifiers["Decimate"].show_viewport = False
+        bpy.context.object.modifiers["Decimate"].ratio = 0.95
+        bpy.ops.object.modifier_apply(modifier="Decimate")
+        self.report({'INFO'}, bl_info.get('name') + ': Decimate nudged 0.95')
+        return {'FINISHED'}
+
 class pie_modifier_mirror_over(Operator):
-    bl_label = "mirror_over"
+    bl_label = "Mirror Over"
     bl_idname = "pie.pie_modifier_mirror_over"
     bl_description = "Mirrors selected object over another."
 
@@ -89,50 +109,22 @@ class pie_modifier_hard_surface(Operator):
         self.report({'INFO'}, bl_info.get('name') + ': Bevelled and subdivided')
         return {'FINISHED'}
 
-class pie_mask_slice_new_object(Operator):
-    bl_label = "mask_slice_new_object"
-    bl_idname = "pie.pie_mask_slice_new_object"
-    bl_description = "Mask slices and fills holes, clears masks"
+class pie_modifier_sub_division_1(Operator):
+    bl_label = "Subdivide"
+    bl_idname = "pie.pie_modifier_sub_division_1"
+    bl_description = "Adds a subsurface modifier and applies."
 
     def execute(self, context):
-        og_object = bpy.context.active_object
-
-        if bpy.context.active_object.mode != 'SCULPT':
-            self.report({'ERROR'}, bl_info.get('name') + ': Please enter sculpt mode first and mask something')
+        if bpy.context.active_object == None:
+            self.report({'ERROR'}, bl_info.get('name') + ': Please select an object first')
             return {'FINISHED'}
+        bpy.context.active_object.select_set(True)
 
-        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.context.active_object.modifiers.new(name='SUBSURF', type='SUBSURF')
+        bpy.context.active_object.modifiers["SUBSURF"].levels = 1
+        bpy.ops.object.convert(target='MESH')
 
-        # Duplicates object.
-        bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "orient_type":'GLOBAL', "orient_matrix":((0, 0, 0), (0, 0, 0), (0, 0, 0)), "orient_matrix_type":'GLOBAL', "constraint_axis":(False, False, False), "mirror":False, "use_proportional_edit":False, "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "use_proportional_connected":False, "use_proportional_projected":False, "snap":False, "snap_elements":{'INCREMENT'}, "use_snap_project":False, "snap_target":'CLOSEST', "use_snap_self":True, "use_snap_edit":True, "use_snap_nonedit":True, "use_snap_selectable":False, "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "cursor_transform":False, "texture_space":False, "remove_on_cancel":False, "use_duplicated_keyframes":False, "view2d_edge_pan":False, "release_confirm":False, "use_accurate":False, "use_automerge_and_split":False})
-
-        bpy.ops.object.mode_set(mode='SCULPT')
-
-        # Flip mask.
-        bpy.ops.paint.mask_flood_fill(mode='INVERT')
-
-        # Mask slice and fill holes.
-        bpy.ops.mesh.paint_mask_slice(new_object=False)
-
-        # Clear mask.
-        bpy.ops.paint.mask_flood_fill(mode='VALUE', value=0)
-
-        bpy.ops.object.mode_set(mode='OBJECT')
-
-        # Select first object
-        bpy.context.active_object = og_object
-
-        bpy.ops.object.mode_set(mode='SCULPT')
-
-        # Mask slice and fill holes.
-        bpy.ops.mesh.paint_mask_slice(new_object=False)
-
-        # Clear mask.
-        bpy.ops.paint.mask_flood_fill(mode='VALUE', value=0)
-
-        bpy.ops.object.mode_set(mode='OBJECT')
-
-        self.report({'INFO'}, bl_info.get('name') + ': Mask sliced and holes filled, masks cleared')
+        self.report({'INFO'}, bl_info.get('name') + ': Subdivided')
         return {'FINISHED'}
 
 class pie_modifier_array_curve(Operator):
@@ -176,4 +168,38 @@ class pie_modifier_array_curve(Operator):
         mesh_obj.select_set(True)
         
         self.report({'INFO'}, bl_info.get('name') + ': Arrayed and following new curve')
+        return {'FINISHED'}
+
+class pie_modifier_bool_union(Operator):
+    bl_label = "Union"
+    bl_idname = "pie.pie_modifier_bool_union"
+    bl_description = "Bool union objects together."
+
+    def execute(self, context):
+        if bpy.context.active_object.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        bpy.ops.object.convert(target='MESH')
+        apply_scale()
+        bpy.ops.object.modifier_apply(modifier="Auto Boolean")
+        bpy.ops.object.booltool_auto_union()
+
+        self.report({'INFO'}, bl_info.get('name') + ': Bool unioned objects together')
+        return {'FINISHED'}
+
+class pie_modifier_bool_diff(Operator):
+    bl_label = "Diff"
+    bl_idname = "pie.pie_modifier_bool_diff"
+    bl_description = "Bool diff objects."
+
+    def execute(self, context):
+        if bpy.context.active_object.mode != 'OBJECT':
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        bpy.ops.object.convert(target='MESH')
+        apply_scale()
+        bpy.ops.object.modifier_apply(modifier="Auto Boolean")
+        bpy.ops.object.booltool_auto_difference()
+
+        self.report({'INFO'}, bl_info.get('name') + ': Bool diffed objects')
         return {'FINISHED'}

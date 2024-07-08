@@ -1,5 +1,4 @@
 import bpy
-from . bl_info import *
 from . pie_create import *
 from . pie_misc import *
 from . pie_flip import *
@@ -8,6 +7,16 @@ from . pie_symmetry import *
 from . pie_modifier import *
 from . pie_mask_slice import *
 # from . pie_dyntopo import *
+
+bl_info = {
+    "name": "MW Sculpt Pies",
+    "author": "Martin Wyatt",
+    "version": (2, 1, 0, 0),
+    "description": "Helper pies for sculpting faster!",
+    "location": "View 3D",
+    "blender": (4, 1, 1),
+    "category": "Object",
+}
 
 classes = [
     MWSCULPTPIES_MT_PIE_CREATE,
